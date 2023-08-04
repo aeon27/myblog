@@ -29,8 +29,8 @@ func init() {
 		log.Fatal(2, "Fail to get section 'database': %v", err)
 	}
 
-	dbType = sec.Key("TYPE").String()
-	dbName = sec.Key("NAME").String()
+	dbType = sec.Key("DB_TYPE").String()
+	dbName = sec.Key("DB_NAME").String()
 	user = sec.Key("USER").String()
 	password = sec.Key("PASSWORD").String()
 	host = sec.Key("HOST").String()
