@@ -28,13 +28,13 @@ func GetAuth(c *gin.Context) {
 		if models.CheckAuth(username, password) {
 			token, err := util.GenerateToken(username, password)
 			if err != nil {
-				code = e.ERROR_AUTH_TOKEN
+				code = e.ERROR_AUTH_GEN_TOKEN_FAIL
 			} else {
 				data["token"] = token
 				code = e.SUCCESS
 			}
 		} else {
-			code = e.ERROR_AUTH
+			code = e.ERROR_AUTH_CHECK_FAIL
 		}
 	} else {
 		for _, err := range valid.Errors {
