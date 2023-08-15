@@ -101,7 +101,7 @@ func deleteCallback(scope *gorm.Scope) {
 		}
 
 		deletedOnField, hasDeletedOnField := scope.FieldByName("DeletedOn")
-		if !scope.Search.Unscoped && hasDeletedOnField { // 硬删除
+		if !scope.Search.Unscoped && hasDeletedOnField { // 软删除
 			scope.Raw(fmt.Sprintf(
 				"UPDATE %v SET %v=%v%v%v",
 				scope.QuotedTableName(),
@@ -110,7 +110,7 @@ func deleteCallback(scope *gorm.Scope) {
 				addExtraSpaceIfExist(scope.CombinedConditionSql()),
 				addExtraSpaceIfExist(extraOption),
 			)).Exec()
-		} else { // 软删除
+		} else { // 硬删除
 			scope.Raw(fmt.Sprintf(
 				"DELETE FROM %v%v%v",
 				scope.QuotedTableName(),
@@ -126,4 +126,11 @@ func addExtraSpaceIfExist(str string) string {
 		return " " + str
 	}
 	return ""
+}
+
+// 硬删除article，GORM约定硬删除用Unscoped
+func CleanAllArticles() bool {
+	db.Unscoped().Where("deleted_on != ?", 0).Delete(&Article{})
+
+	return true
 }

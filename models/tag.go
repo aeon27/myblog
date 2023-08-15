@@ -89,3 +89,10 @@ func (tag *Tag) BeforeUpdate(scope *gorm.Scope) error {
 
 	return err
 }
+
+// 硬删除tag，GORM约定硬删除用Unscoped
+func CleanAllTags() bool {
+	db.Unscoped().Where("deleted_on != ?", 0).Delete(&Tag{})
+
+	return true
+}
