@@ -20,36 +20,20 @@ type Model struct {
 	DeletedOn  int `json:"deleted_on"`
 }
 
-func init() {
-	var (
-		err                                               error
-		dbType, dbName, user, password, host, tablePrefix string
-	)
-
-	sec, err := setting.Cfg.GetSection("database")
-	if err != nil {
-		log.Fatalf("Fail to get section 'database': %v", err)
-	}
-
-	dbType = sec.Key("DB_TYPE").String()
-	dbName = sec.Key("DB_NAME").String()
-	user = sec.Key("USER").String()
-	password = sec.Key("PASSWORD").String()
-	host = sec.Key("HOST").String()
-	tablePrefix = sec.Key("TABLE_PREFIX").String()
-
-	db, err = gorm.Open(dbType, fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		user,
-		password,
-		host,
-		dbName))
+func Setup() {
+	var err error // 若不单独定义err，用:=初始化会导致全局变量db被覆盖
+	db, err = gorm.Open(setting.DatabaseSetting.DBType, fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		setting.DatabaseSetting.User,
+		setting.DatabaseSetting.Password,
+		setting.DatabaseSetting.Host,
+		setting.DatabaseSetting.DBName))
 
 	if err != nil {
 		log.Println(err)
 	}
 
 	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
-		return tablePrefix + defaultTableName
+		return setting.DatabaseSetting.TablePrefix + defaultTableName
 	}
 
 	db.SingularTable(true)
@@ -93,6 +77,7 @@ func updateTimeStampForUpdateCallback(scope *gorm.Scope) {
 	}
 }
 
+// 该回调函数用于软删除
 func deleteCallback(scope *gorm.Scope) {
 	if !scope.HasError() {
 		var extraOption string

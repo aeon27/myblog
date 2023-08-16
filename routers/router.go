@@ -13,7 +13,7 @@ func InitRouter() *gin.Engine {
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
 	// r.Use(jwt.JWT())
-	gin.SetMode(setting.RunMode)
+	gin.SetMode(setting.ServerSetting.RunMode)
 
 	// 鉴权
 	r.GET("/auth", api.GetAuth)
