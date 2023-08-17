@@ -2,51 +2,46 @@ package logging
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"time"
 
+	"github.com/aeon27/myblog/pkg/file"
 	"github.com/aeon27/myblog/pkg/setting"
 )
 
 func getLogFilePath() string {
-	return fmt.Sprintf("%s", setting.AppSetting.LogSavePath)
+	return fmt.Sprintf("%s%s", setting.AppSetting.RuntimeRootPath, setting.AppSetting.LogSavePath)
 }
 
-func getLogFileFullPath() string {
-	prefixPath := getLogFilePath()
-	suffixPath := fmt.Sprintf("%s%s.%s",
+func getLogFileName() string {
+	return fmt.Sprintf("%s%s.%s",
 		setting.AppSetting.LogSaveName,
 		time.Now().Format(setting.AppSetting.TimeFormat),
-		setting.AppSetting.LogFileExt)
-
-	return fmt.Sprintf("%s/%s", prefixPath, suffixPath)
+		setting.AppSetting.LogFileExt,
+	)
 }
 
-func openLogFile(filePath string) *os.File {
-	// os.Stat：返回文件信息结构描述文件。如果出现错误，会返回*PathError
-	_, err := os.Stat(filePath)
-	switch {
-	case os.IsNotExist(err): // 不存在则创建目录
-		mkDir()
-	case os.IsPermission(err): // 权限不满足
-		log.Fatalf("Permission: %v", err)
-	}
-
-	// 0644 = -rw-r--r--; 4-r, 2-w, 1-x
-	fileHandle, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+func openLogFile(fileName, filePath string) (*os.File, error) {
+	dir, err := os.Getwd()
 	if err != nil {
-		log.Fatalf("Fail to OpenFile: %v", err)
+		return nil, fmt.Errorf("os.Getwd err: %v", err)
 	}
 
-	return fileHandle
-}
+	src := dir + "/" + filePath
+	noPerm := file.CheckPermission(src)
+	if noPerm {
+		return nil, fmt.Errorf("file.CheckPermission Permission denied src: %s", src)
+	}
 
-func mkDir() {
-	// os.Getwd()返回与当前目录对应的根路径名
-	dir, _ := os.Getwd()
-	err := os.MkdirAll(dir+"/"+getLogFilePath(), os.ModePerm) // ModePerm = 0777
+	err = file.IsNotExistMkDir(src)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("file.IsNotExistMkDir src: %s, err: %v", src, err)
 	}
+
+	f, err := file.Open(src+fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return nil, fmt.Errorf("file.Open Fail to OpenFile: %v", err)
+	}
+
+	return f, nil
 }

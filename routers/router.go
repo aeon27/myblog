@@ -1,8 +1,11 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/aeon27/myblog/middlewares/jwt"
 	"github.com/aeon27/myblog/pkg/setting"
+	"github.com/aeon27/myblog/pkg/upload"
 	"github.com/aeon27/myblog/routers/api"
 	v1 "github.com/aeon27/myblog/routers/api/v1"
 	"github.com/gin-gonic/gin"
@@ -15,8 +18,10 @@ func InitRouter() *gin.Engine {
 	// r.Use(jwt.JWT())
 	gin.SetMode(setting.ServerSetting.RunMode)
 
-	// 鉴权
-	r.GET("/auth", api.GetAuth)
+	r.GET("/auth", api.GetAuth) // 鉴权
+
+	r.POST("/upload", api.UploadImage)                                // 上传图片
+	r.StaticFS("/upload/images", http.Dir(upload.GetImageFullPath())) // 访问图片
 
 	apiv1 := r.Group("api/v1")
 	// 注意，对非鉴权接口路由使用jwt中间件，此处即为api/v1

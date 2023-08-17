@@ -29,8 +29,13 @@ const (
 )
 
 func Setup() {
-	filePath := getLogFileFullPath()
-	F = openLogFile(filePath)
+	var err error
+	fileName := getLogFileName()
+	filePath := getLogFilePath()
+	F, err = openLogFile(fileName, filePath)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	logger = log.New(F, DefaultPrefix, log.LstdFlags) // log.LstdFlags 标准日志格式 日期+时间
 }
