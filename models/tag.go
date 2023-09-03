@@ -17,62 +17,94 @@ type Tag struct {
 }
 
 // 添加标签
-func AddTag(name, createdBy string, state int) bool {
-	db.Create(&Tag{
+func AddTag(name, createdBy string, state int) error {
+	err := db.Create(&Tag{
 		Name:      name,
 		CreatedBy: createdBy,
 		State:     state,
-	})
+	}).Error
+	if err != nil {
+		return err
+	}
 
-	return true
+	return nil
 }
 
 // 分页获取标签
-func GetTags(pageNum int, pageSize int, maps interface{}) (tags []Tag) {
-	db.Where(maps).Offset(pageNum).Limit(pageSize).Find(&tags)
-
-	return
+func GetTags(pageNum int, pageSize int, maps interface{}) ([]Tag, error) {
+	var tags []Tag
+	err := db.Where(maps).Offset(pageNum).Limit(pageSize).Find(&tags).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	return tags, nil
 }
 
 // 获取标签数量
-func GetTagTotal(maps interface{}) (count int) {
-	db.Model(&Tag{}).Where(maps).Count(&count)
+func GetTagTotal(maps interface{}) (int, error) {
+	var count int
+	err := db.Model(&Tag{}).Where(maps).Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
 
-	return
+	return count, nil
 }
 
 // 编辑标签
-func EditTag(id int, data map[string]interface{}) bool {
-	db.Model(&Tag{}).Where("id = ?", id).Update(data)
+func EditTag(id int, data map[string]interface{}) error {
+	err := db.Model(&Tag{}).Where("id = ?", id).Update(data).Error
+	if err != nil {
+		return err
+	}
 
-	return true
+	return nil
 }
 
 // 删除标签
-func DeleteTag(id int) bool {
-	db.Where("id = ?", id).Delete(&Tag{})
+func DeleteTag(id int) error {
+	err := db.Where("id = ?", id).Delete(&Tag{}).Error
+	if err != nil {
+		return err
+	}
 
-	return true
+	return nil
 }
 
 // 根据名字判断标签是否存在
-func ExistTagByName(name string) bool {
+func ExistTagByName(name string) (bool, error) {
 	var tag Tag
-	db.Select("id").Where("name = ?", name).First(&tag)
-	if tag.ID > 0 {
-		return true
+	err := db.Select("id").Where("name = ?", name).First(&tag).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return false, err
 	}
-	return false
+	if tag.ID > 0 {
+		return true, nil
+	}
+	return false, nil
 }
 
 // 根据id判断标签是否存在
-func ExistTagByID(id int) bool {
+func ExistTagByID(id int) (bool, error) {
 	var tag Tag
-	db.Select("id").Where("id = ?", id).First(&tag)
-	if tag.ID > 0 {
-		return true
+	err := db.Select("id").Where("id = ?", id).First(&tag).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return false, err
 	}
-	return false
+	if tag.ID > 0 {
+		return true, nil
+	}
+	return false, nil
+}
+
+// 硬删除tag，GORM约定硬删除用Unscoped
+func CleanAllTags() error {
+	err := db.Unscoped().Where("deleted_on != ?", 0).Delete(&Tag{}).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // 属于gorm的钩子机制
@@ -88,11 +120,4 @@ func (tag *Tag) BeforeUpdate(scope *gorm.Scope) error {
 	err := scope.SetColumn("ModifiedOn", time.Now().Unix())
 
 	return err
-}
-
-// 硬删除tag，GORM约定硬删除用Unscoped
-func CleanAllTags() bool {
-	db.Unscoped().Where("deleted_on != ?", 0).Delete(&Tag{})
-
-	return true
 }

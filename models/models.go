@@ -20,6 +20,7 @@ type Model struct {
 	DeletedOn  int `json:"deleted_on"`
 }
 
+// 初始化数据库连接，以及设置gorm回调函数
 func Setup() {
 	var err error // 若不单独定义err，用:=初始化会导致全局变量db被覆盖
 	db, err = gorm.Open(setting.DatabaseSetting.DBType, fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
@@ -111,11 +112,4 @@ func addExtraSpaceIfExist(str string) string {
 		return " " + str
 	}
 	return ""
-}
-
-// 硬删除article，GORM约定硬删除用Unscoped
-func CleanAllArticles() bool {
-	db.Unscoped().Where("deleted_on != ?", 0).Delete(&Article{})
-
-	return true
 }

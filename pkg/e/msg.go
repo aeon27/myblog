@@ -5,9 +5,19 @@ var MsgFlags = map[int]string{
 	ERROR:          "fail",
 	INVALID_PARAMS: "请求参数错误",
 
-	ERROR_EXIST_TAG:         "已存在该标签名称",
-	ERROR_NOT_EXIST_TAG:     "该标签不存在",
-	ERROR_NOT_EXIST_ARTICLE: "该文章不存在",
+	ERROR_EXIST_TAG:            "已存在该标签名称",
+	ERROR_CHECK_EXIST_TAG_FAIL: "校验标签是否已存在失败",
+	ERROR_NOT_EXIST_TAG:        "该标签不存在",
+	ERROR_ADD_TAG_FAIL:         "添加标签失败",
+	ERROR_EDIT_TAG_FAIL:        "编辑标签失败",
+	ERROR_GET_TAGS_FAIL:        "获取所有标签失败",
+	ERROR_GET_TAG_COUNT_FAIL:   "获取标签数量失败",
+	ERROR_DELETE_TAG_FAIL:      "删除标签失败",
+
+	ERROR_ADD_ARTICLE_FAIL:         "添加文章失败",
+	ERROR_GET_ARTICLE_FAIL:         "获取文章失败",
+	ERROR_NOT_EXIST_ARTICLE:        "该文章不存在",
+	ERROR_CHECK_EXIST_ARTICLE_FAIL: "校验文章是否已存在失败",
 
 	ERROR_AUTH_CHECK_FAIL:          "鉴权参数校验失败",
 	ERROR_AUTH_NOT_HAVE_TOKEN:      "Token缺失",

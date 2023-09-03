@@ -10,6 +10,7 @@ import (
 
 var RedisConn *redis.Pool
 
+// 初始化redis相关连接和设置
 func Setup() error {
 	RedisConn = &redis.Pool{
 		MaxIdle:     setting.RedisSetting.MaxIdle,
