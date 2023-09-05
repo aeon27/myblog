@@ -2,10 +2,17 @@ package tag_service
 
 import (
 	"encoding/json"
+	"io"
+	"strconv"
+	"time"
 
+	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/aeon27/myblog/gredis"
 	"github.com/aeon27/myblog/models"
+	"github.com/aeon27/myblog/pkg/export"
+	"github.com/aeon27/myblog/pkg/file"
 	"github.com/aeon27/myblog/service/cache_service"
+	"github.com/tealeg/xlsx"
 )
 
 type Tag struct {
@@ -81,6 +88,85 @@ func (t *Tag) Delete() error {
 
 func (t *Tag) GetCount() (int, error) {
 	return models.GetTagTotal(t.getMaps())
+}
+
+// 将所有标签信息导出到文件
+func (t *Tag) Export() (string, error) {
+	tags, err := t.GetAll()
+	if err != nil {
+		return "", err
+	}
+
+	xlsFile := xlsx.NewFile()
+	sheet, err := xlsFile.AddSheet("标签信息")
+	if err != nil {
+		return "", nil
+	}
+
+	titles := []string{"ID", "名称", "创建人", "创建时间", "修改人", "修改时间"}
+	row := sheet.AddRow()
+
+	for _, title := range titles { // 将标签属性作为列名加入第一行
+		cell := row.AddCell()
+		cell.Value = title
+	}
+
+	for _, tag := range tags { // 将每一个标签的所有属性信息作为新的row加入sheet
+		values := []string{
+			strconv.Itoa(tag.ID),
+			tag.Name,
+			tag.CreatedBy,
+			strconv.Itoa(tag.CreatedOn),
+			tag.ModifiedBy,
+			strconv.Itoa(tag.ModifiedOn),
+		}
+
+		row := sheet.AddRow()
+		for _, v := range values {
+			cell := row.AddCell()
+			cell.Value = v
+		}
+	}
+
+	exportPath := export.GetExportFullPath()
+	err = file.IsNotExistMkDir(exportPath) // 不存在则创建目录
+	if err != nil {
+		return "", err
+	}
+
+	time := strconv.Itoa(int(time.Now().Unix()))
+	fileName := "tags-" + time + ".xlsx"
+	err = xlsFile.Save(exportPath + fileName) // 导出到指定路径
+	if err != nil {
+		return "", err
+	}
+
+	return fileName, nil
+}
+
+// 导入标签
+func (t *Tag) Import(reader io.Reader) error {
+	xlsx, err := excelize.OpenReader(reader)
+	if err != nil {
+		return err
+	}
+
+	rows := xlsx.GetRows("标签信息")
+	for _, row := range rows {
+		var data []string
+		for _, cell := range row {
+			data = append(data, cell)
+		}
+		if data[0] == "ID" {
+			continue
+		}
+		err = models.AddTag(data[1], data[2], 1)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (t *Tag) getMaps() map[string]interface{} {

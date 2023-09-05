@@ -15,10 +15,10 @@ import (
 
 // 获取图片完整的URL
 func GetImageFullURL(name string) string {
-	return setting.AppSetting.ImagePrefixUrl + "/" + GetImagePath() + name
+	return setting.AppSetting.PrefixUrl + "/" + GetImagePath() + name
 }
 
-// 获取图片名称
+// 获取图片名称，将文件名部分转为MD5，后缀不变
 func GetImageName(name string) string {
 	ext := file.GetExt(name)
 	fileName := util.EncodeMD5(strings.TrimSuffix(name, ext))

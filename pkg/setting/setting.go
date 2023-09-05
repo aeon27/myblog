@@ -8,11 +8,12 @@ import (
 )
 
 type App struct {
-	JWTSecret       string
-	PageSize        int
+	JWTSecret string
+	PageSize  int
+	PrefixUrl string
+
 	RuntimeRootPath string
 
-	ImagePrefixUrl string
 	ImageSavePath  string
 	ImageMaxSize   int
 	ImageAllowExts []string
@@ -21,6 +22,8 @@ type App struct {
 	LogSaveName string
 	LogFileExt  string
 	TimeFormat  string
+
+	ExportSavePath string
 }
 
 type Server struct {

@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 
+	"github.com/aeon27/myblog/pkg/app"
 	"github.com/aeon27/myblog/pkg/e"
 	"github.com/aeon27/myblog/pkg/logging"
 	"github.com/aeon27/myblog/pkg/upload"
@@ -10,6 +11,7 @@ import (
 )
 
 func UploadImage(c *gin.Context) {
+	resp := app.Responsor{GinContext: c}
 	code := e.SUCCESS
 	data := make(map[string]interface{})
 
@@ -17,11 +19,8 @@ func UploadImage(c *gin.Context) {
 	if err != nil {
 		logging.Warn(err)
 		code = e.ERROR
-		c.JSON(http.StatusOK, gin.H{
-			"code": code,
-			"data": data,
-			"msg":  e.GetMsg(code),
-		})
+		resp.Response(http.StatusOK, code, data)
+		return
 	}
 
 	if image == nil {
@@ -48,9 +47,5 @@ func UploadImage(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code": code,
-		"data": data,
-		"msg":  e.GetMsg(code),
-	})
+	resp.Response(http.StatusOK, code, data)
 }

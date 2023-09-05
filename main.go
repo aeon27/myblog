@@ -5,10 +5,11 @@ import (
 	"log"
 	"syscall"
 
+	"github.com/aeon27/myblog/gredis"
 	"github.com/aeon27/myblog/models"
 	"github.com/aeon27/myblog/pkg/logging"
 	"github.com/aeon27/myblog/pkg/setting"
-	router "github.com/aeon27/myblog/routers"
+	"github.com/aeon27/myblog/routers"
 	"github.com/fvbock/endless"
 )
 
@@ -16,6 +17,7 @@ func main() {
 	setting.Setup()
 	models.Setup()
 	logging.Setup()
+	gredis.Setup()
 
 	// 借助 endless 实现服务优雅启停
 	// endless server 监听以下几种信号量
@@ -28,7 +30,7 @@ func main() {
 	endless.DefaultMaxHeaderBytes = 1 << 20 // 2^20 = 1M
 	addr := fmt.Sprintf(":%d", setting.ServerSetting.HTTPPort)
 
-	server := endless.NewServer(addr, router.InitRouter())
+	server := endless.NewServer(addr, routers.InitRouter())
 	server.BeforeBegin = func(add string) {
 		log.Printf("Actual pid: %d", syscall.Getpid())
 	}

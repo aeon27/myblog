@@ -5,6 +5,7 @@ import (
 
 	"github.com/aeon27/myblog/pkg/app"
 	"github.com/aeon27/myblog/pkg/e"
+	"github.com/aeon27/myblog/pkg/logging"
 	"github.com/aeon27/myblog/pkg/setting"
 	"github.com/aeon27/myblog/pkg/util"
 	"github.com/aeon27/myblog/service/article_service"
@@ -38,6 +39,7 @@ func AddArticle(c *gin.Context) {
 	tagService := tag_service.Tag{ID: form.TagID}
 	tagExists, err := tagService.ExistByID()
 	if err != nil {
+		logging.Warn(err)
 		resp.Response(http.StatusInternalServerError, e.ERROR_CHECK_EXIST_TAG_FAIL, nil)
 		return
 	}
@@ -89,6 +91,7 @@ func EditArticle(c *gin.Context) {
 	tagService := tag_service.Tag{ID: form.TagID}
 	tagExists, err := tagService.ExistByID()
 	if err != nil {
+		logging.Warn(err)
 		resp.Response(http.StatusInternalServerError, e.ERROR_CHECK_EXIST_TAG_FAIL, nil)
 		return
 	}
@@ -111,6 +114,7 @@ func EditArticle(c *gin.Context) {
 	// 再校验对应文章是否存在
 	articleExists, err := articleService.ExistByID()
 	if err != nil {
+		logging.Warn(err)
 		resp.Response(http.StatusInternalServerError, e.ERROR_CHECK_EXIST_ARTICLE_FAIL, nil)
 		return
 	}
@@ -121,6 +125,7 @@ func EditArticle(c *gin.Context) {
 
 	err = articleService.Edit()
 	if err != nil {
+		logging.Warn(err)
 		resp.Response(http.StatusInternalServerError, e.ERROR_EDIT_ARTICLE_FAIL, nil)
 		return
 	}
@@ -145,16 +150,20 @@ func GetArticle(c *gin.Context) {
 	articleService := article_service.Article{ID: id}
 	exists, err := articleService.ExistByID()
 	if err != nil {
+		logging.Warn(err)
 		resp.Response(http.StatusInternalServerError, e.ERROR_CHECK_EXIST_ARTICLE_FAIL, nil)
 		return
 	}
 	if !exists {
 		resp.Response(http.StatusOK, e.ERROR_NOT_EXIST_ARTICLE, nil)
+		return
 	}
 
 	article, err := articleService.Get()
 	if err != nil {
+		logging.Warn(err)
 		resp.Response(http.StatusInternalServerError, e.ERROR_GET_ARTICLE_FAIL, nil)
+		return
 	}
 
 	resp.Response(http.StatusOK, e.SUCCESS, article)
@@ -192,12 +201,14 @@ func GetArticles(c *gin.Context) {
 
 	count, err := articleService.GetCount()
 	if err != nil {
+		logging.Warn(err)
 		resp.Response(http.StatusInternalServerError, e.ERROR_GET_ARTICLE_COUNT_FAIL, nil)
 		return
 	}
 
 	articles, err := articleService.GetAll()
 	if err != nil {
+		logging.Warn(err)
 		resp.Response(http.StatusInternalServerError, e.ERROR_GET_ARTICLES_FAIL, nil)
 		return
 	}
@@ -213,14 +224,15 @@ func GetArticles(c *gin.Context) {
 // 删除文章
 func DeleteArticle(c *gin.Context) {
 	resp := app.Responsor{GinContext: c}
-	id := com.StrTo(c.Param("id")).MustInt()
 
+	id := com.StrTo(c.Param("id")).MustInt()
 	valid := validation.Validation{}
 	valid.Min(id, 1, "id").Message("id必须大于0")
 
 	articleService := article_service.Article{ID: id}
 	exists, err := articleService.ExistByID()
 	if err != nil {
+		logging.Warn(err)
 		resp.Response(http.StatusInternalServerError, e.ERROR_CHECK_EXIST_ARTICLE_FAIL, nil)
 		return
 	}
@@ -232,6 +244,7 @@ func DeleteArticle(c *gin.Context) {
 
 	err = articleService.Delete()
 	if err != nil {
+		logging.Warn(err)
 		resp.Response(http.StatusInternalServerError, e.ERROR_DELETE_ARTICLE_FAIL, nil)
 	}
 

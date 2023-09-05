@@ -5,6 +5,8 @@ import (
 
 	"github.com/aeon27/myblog/pkg/app"
 	"github.com/aeon27/myblog/pkg/e"
+	"github.com/aeon27/myblog/pkg/export"
+	"github.com/aeon27/myblog/pkg/logging"
 	"github.com/aeon27/myblog/pkg/setting"
 	"github.com/aeon27/myblog/pkg/util"
 	"github.com/aeon27/myblog/service/tag_service"
@@ -31,12 +33,14 @@ func GetTags(c *gin.Context) {
 
 	tags, err := tagService.GetAll()
 	if err != nil {
+		logging.Warn(err)
 		resp.Response(http.StatusInternalServerError, e.ERROR_GET_TAGS_FAIL, nil)
 		return
 	}
 
 	count, err := tagService.GetCount()
 	if err != nil {
+		logging.Warn(err)
 		resp.Response(http.StatusInternalServerError, e.ERROR_GET_TAG_COUNT_FAIL, nil)
 		return
 	}
@@ -50,14 +54,14 @@ func GetTags(c *gin.Context) {
 }
 
 type AddTagForm struct {
-	Name       string `json:"name" valid:"Required;MaxSize(100)"`
-	ModifiedBy string `json:"modified_by" valid:"Required;MaxSize(100)"`
-	State      int    `json:"state" valid:"Range(0,1)"`
+	Name      string `form:"name" valid:"Required;MaxSize(100)"`
+	CreatedBy string `form:"created_by" valid:"Required;MaxSize(100)"`
+	State     int    `form:"state" valid:"Range(0,1)"`
 }
 
 func AddTag(c *gin.Context) {
 	resp := app.Responsor{GinContext: c}
-	form := EditTagForm{}
+	form := AddTagForm{}
 
 	httpCode, errCode := app.BindAndValid(c, &form)
 	if errCode != e.SUCCESS {
@@ -66,13 +70,14 @@ func AddTag(c *gin.Context) {
 	}
 
 	tagService := &tag_service.Tag{
-		Name:       form.Name,
-		ModifiedBy: form.ModifiedBy,
-		State:      form.State,
+		Name:      form.Name,
+		CreatedBy: form.CreatedBy,
+		State:     form.State,
 	}
 
 	exists, err := tagService.ExistByName()
 	if err != nil {
+		logging.Warn(err)
 		resp.Response(http.StatusInternalServerError, e.ERROR_CHECK_EXIST_TAG_FAIL, nil)
 		return
 	}
@@ -83,6 +88,7 @@ func AddTag(c *gin.Context) {
 
 	err = tagService.Add()
 	if err != nil {
+		logging.Warn(err)
 		resp.Response(http.StatusInternalServerError, e.ERROR_ADD_TAG_FAIL, nil)
 		return
 	}
@@ -91,10 +97,10 @@ func AddTag(c *gin.Context) {
 }
 
 type EditTagForm struct {
-	ID         int    `json:"id" valid:"Required;Min(1)"`
-	Name       string `json:"name" valid:"Required;MaxSize(100)"`
-	ModifiedBy string `json:"modified_by" valid:"Required;MaxSize(100)"`
-	State      int    `json:"state" valid:"Range(0,1)"`
+	ID         int    `form:"id" valid:"Required;Min(1)"`
+	Name       string `form:"name" valid:"Required;MaxSize(100)"`
+	ModifiedBy string `form:"modified_by" valid:"Required;MaxSize(100)"`
+	State      int    `form:"state" valid:"Range(0,1)"`
 }
 
 func EditTag(c *gin.Context) {
@@ -116,6 +122,7 @@ func EditTag(c *gin.Context) {
 
 	exists, err := tagService.ExistByID()
 	if err != nil {
+		logging.Warn(err)
 		resp.Response(http.StatusInternalServerError, e.ERROR_CHECK_EXIST_TAG_FAIL, nil)
 		return
 	}
@@ -126,6 +133,7 @@ func EditTag(c *gin.Context) {
 
 	err = tagService.Edit()
 	if err != nil {
+		logging.Warn(err)
 		resp.Response(http.StatusInternalServerError, e.ERROR_EDIT_TAG_FAIL, nil)
 		return
 	}
@@ -151,6 +159,7 @@ func DeleteTag(c *gin.Context) {
 	}
 	exists, err := tagService.ExistByID()
 	if err != nil {
+		logging.Warn(err)
 		resp.Response(http.StatusInternalServerError, e.ERROR_CHECK_EXIST_TAG_FAIL, nil)
 		return
 	}
@@ -161,7 +170,63 @@ func DeleteTag(c *gin.Context) {
 
 	err = tagService.Delete()
 	if err != nil {
+		logging.Warn(err)
 		resp.Response(http.StatusInternalServerError, e.ERROR_DELETE_TAG_FAIL, nil)
+		return
+	}
+
+	resp.Response(http.StatusOK, e.SUCCESS, nil)
+}
+
+// 由数据库导出标签文件
+func ExportTag(c *gin.Context) {
+	resp := app.Responsor{GinContext: c}
+
+	name := c.PostForm("name")
+	state := -1
+	if arg := c.PostForm("state"); arg != "" {
+		state = com.StrTo(arg).MustInt()
+	}
+
+	tagService := tag_service.Tag{
+		Name:  name,
+		State: state,
+		// 此处不添加页码页大小，因为需要全量查询tag
+	}
+
+	fileName, err := tagService.Export()
+	if err != nil {
+		logging.Warn(err)
+		resp.Response(http.StatusInternalServerError, e.ERROR_EXPORT_TAG_FAIL, nil)
+		return
+	}
+
+	exportURL := export.GetExportFullUrl(fileName)
+	exportSavePath := export.GetExportPath() + fileName
+	data := map[string]interface{}{
+		"export_url":       exportURL,
+		"export_save_path": exportSavePath,
+	}
+
+	resp.Response(http.StatusOK, e.SUCCESS, data)
+}
+
+// 由标签文件导入数据库
+func ImportTag(c *gin.Context) {
+	resp := app.Responsor{GinContext: c}
+
+	file, _, err := c.Request.FormFile("file")
+	if err != nil {
+		logging.Warn(err)
+		resp.Response(http.StatusInternalServerError, e.ERROR_GET_TAG_FILE, nil)
+		return
+	}
+
+	tagService := tag_service.Tag{}
+	err = tagService.Import(file)
+	if err != nil {
+		logging.Warn(err)
+		resp.Response(http.StatusInternalServerError, e.ERROR_IMPORT_TAG_FAIL, nil)
 		return
 	}
 

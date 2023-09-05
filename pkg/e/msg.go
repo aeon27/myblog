@@ -13,6 +13,10 @@ var MsgFlags = map[int]string{
 	ERROR_GET_TAGS_FAIL:        "获取所有标签失败",
 	ERROR_GET_TAG_COUNT_FAIL:   "获取标签数量失败",
 	ERROR_DELETE_TAG_FAIL:      "删除标签失败",
+	ERROR_EXPORT_TAG_FAIL:      "导出标签失败",
+	ERROR_TAG_ALREADY_EXISTS:   "该标签名已存在",
+	ERROR_GET_TAG_FILE:         "获取标签文件失败",
+	ERROR_IMPORT_TAG_FAIL:      "导入标签失败",
 
 	ERROR_ADD_ARTICLE_FAIL:         "添加文章失败",
 	ERROR_GET_ARTICLE_FAIL:         "获取文章失败",

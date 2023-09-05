@@ -33,10 +33,17 @@ func AddTag(name, createdBy string, state int) error {
 // 分页获取标签
 func GetTags(pageNum int, pageSize int, maps interface{}) ([]Tag, error) {
 	var tags []Tag
-	err := db.Where(maps).Offset(pageNum).Limit(pageSize).Find(&tags).Error
+	var err error
+
+	if pageNum > 0 && pageSize > 0 { // 分页查询
+		err = db.Where(maps).Offset(pageNum).Limit(pageSize).Find(&tags).Error
+	} else { // 全量查询
+		err = db.Where(maps).Find(&tags).Error
+	}
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
+
 	return tags, nil
 }
 

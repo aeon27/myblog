@@ -46,7 +46,7 @@ func GetArticle(id int) (*Article, error) {
 	// Article有一个结构体成员是TagID，就是外键。
 	// gorm会通过 类名+ID 的方式去找到这两个类之间的关联关系
 	// Article有一个嵌套在里的Tag结构体，我们可以通过Related进行关联查询
-	err := db.Related(&article.Tag).Where("id = ? AND deleted_on = ? ", id, 0).First(&article).Error
+	err := db.Preload("Tag").Where("id = ? AND deleted_on = ? ", id, 0).First(&article).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}

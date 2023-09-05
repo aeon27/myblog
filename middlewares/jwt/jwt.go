@@ -1,6 +1,7 @@
 package jwt
 
 import (
+	"log"
 	"net/http"
 	"time"
 
@@ -17,10 +18,15 @@ func JWT() gin.HandlerFunc {
 		code = e.SUCCESS
 		token := c.Query("token")
 		if token == "" {
+			token = c.GetHeader("token")
+		}
+
+		if token == "" {
 			code = e.ERROR_AUTH_NOT_HAVE_TOKEN
 		} else {
 			claims, err := util.ParseToken(token)
 			if err != nil {
+				log.Println(err)
 				code = e.ERROR_AUTH_CHECK_TOKEN_FAIL
 			} else if time.Now().Unix() > claims.ExpiresAt {
 				code = e.ERROR_AUTH_CHECK_TOKEN_TIMEOUT

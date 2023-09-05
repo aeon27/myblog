@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/aeon27/myblog/models"
+	"github.com/aeon27/myblog/pkg/app"
 	"github.com/aeon27/myblog/pkg/e"
 	"github.com/aeon27/myblog/pkg/logging"
 	"github.com/aeon27/myblog/pkg/util"
@@ -17,6 +18,7 @@ type auth struct {
 }
 
 func GetAuth(c *gin.Context) {
+	resp := app.Responsor{GinContext: c}
 	username := c.Query("username")
 	password := c.Query("password")
 
@@ -29,6 +31,7 @@ func GetAuth(c *gin.Context) {
 			token, err := util.GenerateToken(username, password)
 			if err != nil {
 				code = e.ERROR_AUTH_GEN_TOKEN_FAIL
+				logging.Warn(err)
 			} else {
 				data["token"] = token
 				code = e.SUCCESS
@@ -42,9 +45,5 @@ func GetAuth(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code": code,
-		"data": data,
-		"msg":  e.GetMsg(code),
-	})
+	resp.Response(http.StatusOK, code, data)
 }
