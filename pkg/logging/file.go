@@ -28,7 +28,7 @@ func openLogFile(fileName, filePath string) (*os.File, error) {
 	}
 
 	src := dir + "/" + filePath
-	noPerm := file.CheckPermission(src)
+	noPerm := file.CheckErrPermission(src)
 	if noPerm {
 		return nil, fmt.Errorf("file.CheckPermission Permission denied src: %s", src)
 	}

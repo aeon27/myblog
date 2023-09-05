@@ -21,7 +21,12 @@ var MsgFlags = map[int]string{
 	ERROR_ADD_ARTICLE_FAIL:         "添加文章失败",
 	ERROR_GET_ARTICLE_FAIL:         "获取文章失败",
 	ERROR_NOT_EXIST_ARTICLE:        "该文章不存在",
+	ERROR_GET_ARTICLES_FAIL:        "批量获取文章失败",
+	ERROR_EDIT_ARTICLE_FAIL:        "编辑文章失败",
+	ERROR_DELETE_ARTICLE_FAIL:      "删除文章失败",
+	ERROR_GET_ARTICLE_COUNT_FAIL:   "获取文章数量失败",
 	ERROR_CHECK_EXIST_ARTICLE_FAIL: "校验文章是否已存在失败",
+	ERROR_GEN_ARTICLE_POSTER_FAIL:  "生成文章海报失败",
 
 	ERROR_AUTH_CHECK_FAIL:          "鉴权参数校验失败",
 	ERROR_AUTH_NOT_HAVE_TOKEN:      "Token缺失",
@@ -32,6 +37,8 @@ var MsgFlags = map[int]string{
 	ERROR_UPLOAD_SAVE_IMAGE_FAIL:    "保存图片失败",
 	ERROR_UPLOAD_CHECK_IMAGE_FAIL:   "检查图片失败",
 	ERROR_UPLOAD_CHECK_IMAGE_FORMAT: "校验图片错误，图片格式或大小有问题",
+
+	ERROR_GEN_QRCODE_FAIL: "生成二维码失败",
 }
 
 func GetMsg(code int) string {

@@ -72,9 +72,9 @@ func CheckImage(src string) error {
 		return fmt.Errorf("file.IsNotExistMkDir err: %v", err)
 	}
 
-	noPerm := file.CheckPermission(src)
+	noPerm := file.CheckErrPermission(src)
 	if noPerm {
-		return fmt.Errorf("file.CheckPermission Permission denied src: %v", err)
+		return fmt.Errorf("file.CheckErrPermission Permission denied src: %v", err)
 	}
 
 	return nil

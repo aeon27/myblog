@@ -6,13 +6,19 @@ import (
 	"github.com/aeon27/myblog/pkg/app"
 	"github.com/aeon27/myblog/pkg/e"
 	"github.com/aeon27/myblog/pkg/logging"
+	"github.com/aeon27/myblog/pkg/qrcode"
 	"github.com/aeon27/myblog/pkg/setting"
 	"github.com/aeon27/myblog/pkg/util"
 	"github.com/aeon27/myblog/service/article_service"
 	"github.com/aeon27/myblog/service/tag_service"
 	"github.com/astaxie/beego/validation"
+	"github.com/boombuler/barcode/qr"
 	"github.com/gin-gonic/gin"
 	"github.com/unknwon/com"
+)
+
+const (
+	QRCODE_URL = "https://github.com/aeon27"
 )
 
 type AddArticleForm struct {
@@ -249,4 +255,46 @@ func DeleteArticle(c *gin.Context) {
 	}
 
 	resp.Response(http.StatusOK, e.SUCCESS, nil)
+}
+
+// 生成二维码及合并成文章海报
+func GenArticlePoster(c *gin.Context) {
+	resp := app.Responsor{GinContext: c}
+
+	qrCode := qrcode.NewQRCode(QRCODE_URL, 300, 300, qr.M, qr.Auto)
+	posterName := article_service.GetPosterFlag() +
+		"_" + qrcode.GetQRCodeMD5Name(qrCode.URL) +
+		qrCode.GetQRCodeExt()
+
+	article := &article_service.Article{}
+	articlePoster := article_service.NewArticlePoster(posterName, article, qrCode)
+
+	articlePosterBG := article_service.NewArticlePosterBG(
+		"bg.jpeg",
+		articlePoster,
+		&article_service.Rect{
+			X0: 0,
+			Y0: 0,
+			X1: 500,
+			Y1: 500,
+		},
+		&article_service.Point{
+			X: 100,
+			Y: 100,
+		},
+	)
+
+	_, filePath, err := articlePosterBG.Generate()
+	if err != nil {
+		logging.Warn(err)
+		resp.Response(http.StatusInternalServerError, e.ERROR_GEN_ARTICLE_POSTER_FAIL, nil)
+		return
+	}
+
+	data := map[string]interface{}{
+		"poster_url":      qrcode.GetQRCodeFullURL(posterName),
+		"poster_save_url": filePath + posterName,
+	}
+
+	resp.Response(http.StatusOK, e.SUCCESS, data)
 }

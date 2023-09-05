@@ -5,6 +5,7 @@ import (
 
 	"github.com/aeon27/myblog/middlewares/jwt"
 	"github.com/aeon27/myblog/pkg/export"
+	"github.com/aeon27/myblog/pkg/qrcode"
 	"github.com/aeon27/myblog/pkg/setting"
 	"github.com/aeon27/myblog/pkg/upload"
 	"github.com/aeon27/myblog/routers/api"
@@ -30,6 +31,9 @@ func InitRouter() *gin.Engine {
 	// 访问excel文件
 	r.StaticFS("/export", http.Dir(export.GetExportFullPath()))
 
+	// 访问二维码海报
+	r.StaticFS("/qrcode", http.Dir(qrcode.GetQRCodeFullPath()))
+
 	apiv1 := r.Group("api/v1")
 	// 注意，对非鉴权接口路由使用jwt中间件，此处即为api/v1
 	apiv1.Use(jwt.JWT())
@@ -48,6 +52,7 @@ func InitRouter() *gin.Engine {
 		apiv1.POST("/articles", v1.AddArticle)
 		apiv1.PUT("/articles/:id", v1.EditArticle)
 		apiv1.DELETE("/articles/:id", v1.DeleteArticle)
+		apiv1.POST("/articles/poster/generate", v1.GenArticlePoster)
 	}
 
 	return r
